@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 
 // Icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlay, faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faAngleLeft, faAngleRight, faPause } from '@fortawesome/free-solid-svg-icons';
 
 const Player = ({isPlaying, setIsPlaying, currentSong}) => {
     //Ref
@@ -26,10 +26,15 @@ const Player = ({isPlaying, setIsPlaying, currentSong}) => {
         setSongInfo({...songInfo, currentTime: current, duration: duration});
     };
 
+    const dragHandler = (e) => {
+        audioRef.current.currentTime = e.target.value;
+        setSongInfo({...songInfo, currentTime: e.target.value});
+    };
+
     // States
     const [songInfo, setSongInfo] = useState({
-        currentTime: null,
-        duration: null,
+        currentTime: 0,
+        duration: 0,
     });
 
     // functions
@@ -44,12 +49,23 @@ const Player = ({isPlaying, setIsPlaying, currentSong}) => {
         <div className='player'>
             <div className="time-control">
                 <p>{getTime(songInfo.currentTime)}</p>
-                <input type="range" />
+                <input 
+                    min={0} 
+                    max={songInfo.duration} 
+                    value={songInfo.currentTime} 
+                    type="range" 
+                    onChange={dragHandler}
+                />
                 <p>{getTime(songInfo.duration)}</p>
             </div>
             <div className="play-control">
                 <FontAwesomeIcon className='skip-back' size='2x' icon={faAngleLeft} />
-                <FontAwesomeIcon onClick={playSongHandler} className='play' size='2x' icon={faPlay} />
+                <FontAwesomeIcon 
+                    onClick={playSongHandler} 
+                    className='play' 
+                    size='2x' 
+                    icon={isPlaying ? faPause : faPlay} 
+                />
                 <FontAwesomeIcon className='skip-forward' size='2x' icon={faAngleRight} />
             </div>
             <audio 

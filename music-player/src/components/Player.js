@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 
 // Icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,26 +8,6 @@ const Player = ({songs, setSongs, songInfo,
     setSongInfo, audioRef, 
     isPlaying, setIsPlaying, 
     currentSong, setCurrentSong}) => {
-
-    // useEffect
-    useEffect(() => {
-        const newSongs = songs.map((song) => {
-            if(song.id === currentSong.id){
-                return{
-                    ...song,
-                    active: true,
-                }
-            }
-            else{
-                return{
-                    ...song,
-                    active: false,
-                }
-            }
-        });
-
-        setSongs(newSongs);
-    });
 
     // Event Handlers
     const playSongHandler = () => {
@@ -46,6 +26,29 @@ const Player = ({songs, setSongs, songInfo,
         setSongInfo({...songInfo, currentTime: e.target.value});
     };
 
+    const skipTrackHandler = async (direction) => {
+        let currentIndex = songs.findIndex((song => song.id === currentSong.id));
+
+        if(direction === 'skip-forward'){
+            await setCurrentSong(songs[(currentIndex + 1) % songs.length]);
+            activeLibraryHandler(songs[(currentIndex + 1) % songs.length])
+        }
+
+        if(direction === 'skip-backwards'){
+            // lesson 18 time 15:00, completed differently
+            if(currentIndex === 0){
+                await setCurrentSong(songs[songs.length - 1]);
+                activeLibraryHandler(songs[songs.length - 1])
+                if(isPlaying) audioRef.current.play();
+                return;
+            }
+            await setCurrentSong(songs[(currentIndex - 1) % songs.length]);
+            activeLibraryHandler(songs[(currentIndex - 1) % songs.length]);
+        }
+        // check if song is playing
+        if(isPlaying) audioRef.current.play();
+    };
+
     // functions
     const getTime = (time) => {
         return(
@@ -54,21 +57,22 @@ const Player = ({songs, setSongs, songInfo,
         );
     };
 
-    const skipTrackHandler = (direction) => {
-        let currentIndex = songs.findIndex((song => song.id === currentSong.id));
-
-        if(direction === 'skip-forward'){
-            setCurrentSong(songs[(currentIndex + 1) % songs.length]);
-        }
-
-        if(direction === 'skip-backwards'){
-            // lesson 18 time 15:00, completed differently
-            if(currentIndex === 0){
-                setCurrentSong(songs[songs.length - 1]);
-                return;
+    const activeLibraryHandler = (nextPrev) => {
+        const newSongs = songs.map((song) => {
+            if(song.id === nextPrev.id){
+                return{
+                    ...song,
+                    active: true,
+                }
             }
-            setCurrentSong(songs[(currentIndex - 1) % songs.length]);
-        }
+            else{
+                return{
+                    ...song,
+                    active: false,
+                }
+            }
+        });
+        setSongs(newSongs);
     };
 
     return(
@@ -82,7 +86,7 @@ const Player = ({songs, setSongs, songInfo,
                     type="range" 
                     onChange={dragHandler}
                 />
-                <p>{getTime(songInfo.duration)}</p>
+                <p>{songInfo.duration ? getTime(songInfo.duration) : '0:00'}</p>
             </div>
             <div className="play-control">
                 <FontAwesomeIcon 
